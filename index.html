@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="author" content="Guilherme Oliveira">
+    <meta name="description" content="Sistema de gerenciamento de funcionários">
+    <meta name="keywords" content="funcionários, gestão, JavaScript">
+    <title>Sistema de Gerenciamento de Funcionários</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo img {
+            max-width: 150px;
+            max-height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #3498db;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border-left: 4px solid #3498db;
+            background-color: #f9f9f9;
+        }
+        .section h2 {
+            color: #2980b9;
+            margin-top: 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #777;
+            font-size: 14px;
+        }
+        #output {
+            background-color: #f8f8f8;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+        }
+        .notification.error {
+            background-color: #f44336;
+        }
+        .notification.show {
+            display: block;
+            animation: fadeIn 0.5s, fadeOut 0.5s 2.5s;
+            animation-fill-mode: forwards;
+        }
+        @keyframes fadeIn {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
+        @keyframes fadeOut {
+            from {opacity: 1;}
+            to {opacity: 0;}
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <!-- Substitua o caminho da imagem abaixo pelo caminho correto da sua imagem -->
+            <img src="foto123.png" alt="Logo" id="logo-img">
+            <!-- Fallback caso a imagem não carregue -->
+            <svg width="150" height="150" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" id="logo-fallback" style="display: none;">
+                <circle cx="50" cy="50" r="45" fill="#3498db" />
+                <text x="50" y="65" font-size="40" fill="white" text-anchor="middle" font-weight="bold">GO</text>
+            </svg>
+        </div>
+        
+        <h1>Sistema de Gerenciamento de Funcionários</h1>
+        
+        <div class="section">
+            <h2>Ações</h2>
+            <button id="executar-btn" class="btn">Executar Todas as Ações</button>
+            <button id="listar-btn" class="btn">Listar Funcionários</button>
+            <button id="aumentar-btn" class="btn">Aumentar Salários (10%)</button>
+            <button id="agrupar-btn" class="btn">Agrupar por Função</button>
+            <button id="aniversariantes-btn" class="btn">Aniversariantes (Out/Dez)</button>
+            <button id="idade-btn" class="btn">Funcionário Mais Velho</button>
+            <button id="ordenar-btn" class="btn">Ordenar por Nome</button>
+            <button id="total-salarios-btn" class="btn">Total de Salários</button>
+            <button id="salarios-minimos-btn" class="btn">Salários Mínimos</button>
+        </div>
+        
+        <div class="section">
+            <h2>Resultado da Execução</h2>
+            <div id="output"></div>
+        </div>
+        
+        <div class="section">
+            <h2>Lista de Funcionários</h2>
+            <div id="lista-funcionarios"></div>
+        </div>
+        
+        <div class="section">
+            <h2>Funcionários por Função</h2>
+            <div id="funcionarios-por-funcao"></div>
+        </div>
+        
+        <div class="footer">
+            <p>Desenvolvido por Guilherme Oliveira</p>
+            <p>&copy; 2023 - Todos os direitos reservados</p>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script>
+        /**
+         * @author Guilherme Oliveira
+         * @description Sistema de gerenciamento de funcionários
+         * @version 1.0
+         */
+
+        // Verificar se a imagem carregou, caso contrário mostrar o fallback
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoImg = document.getElementById('logo-img');
+            const logoFallback = document.getElementById('logo-fallback');
+            
+            logoImg.onerror = function() {
+                this.style.display = 'none';
+                logoFallback.style.display = 'block';
+                showNotification('Imagem do logo não encontrada. Usando logo padrão.', 'error');
+            };
+        });
+
+        // Função para mostrar notificações
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = 'notification show';
+            
+            if (type === 'error') {
+                notification.classList.add('error');
+            }
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Classe Pessoa
+        class Pessoa {
+            constructor(nome, dataNascimento) {
+                this.nome = nome;
+                this.dataNascimento = dataNascimento;
+            }
+        }
+
+        // Classe Funcionario
+        class Funcionario extends Pessoa {
+            constructor(nome, dataNascimento, salario, funcao) {
+                super(nome, dataNascimento);
+                this.salario = salario;
+                this.funcao = funcao;
+            }
+        }
+
+        // Classe Principal
+        class Principal {
+            constructor() {
+                this.funcionarios = [];
+                this.outputElement = document.getElementById('output');
+                this.listaFuncionariosElement = document.getElementById('lista-funcionarios');
+                this.funcionariosPorFuncaoElement = document.getElementById('funcionarios-por-funcao');
+            }
+
+            // 3.1 – Inserir todos os funcionários
+            inserirFuncionarios() {
+                this.funcionarios.push(new Funcionario("Maria", new Date(2000, 9, 18), 2009.44, "Operador"));
+                this.funcionarios.push(new Funcionario("João", new Date(1990, 4, 12), 2284.38, "Operador"));
+                this.funcionarios.push(new Funcionario("Caio", new Date(1961, 4, 2), 9836.14, "Coordenador"));
+                this.funcionarios.push(new Funcionario("Miguel", new Date(1988, 9, 14), 19119.88, "Diretor"));
+                this.funcionarios.push(new Funcionario("Alice", new Date(1995, 0, 5), 2274.29, "Recepcionista"));
+                this.funcionarios.push(new Funcionario("Heitor", new Date(1999, 10, 19), 1582.72, "Operador"));
+                this.funcionarios.push(new Funcionario("Arthur", new Date(1993, 2, 31), 4071.84, "Contador"));
+                this.funcionarios.push(new Funcionario("Laura", new Date(1994, 6, 8), 3017.45, "Gerente"));
+                this.funcionarios.push(new Funcionario("Heloísa", new Date(2003, 4, 24), 1606.85, "Eletricista"));
+                this.funcionarios.push(new Funcionario("Helena", new Date(1996, 8, 2), 2799.93, "Gerente"));
+            }
+
+            // 3.2 – Remover o funcionário "João" da lista
+            removerFuncionario(nome) {
+                const tamanhoAnterior = this.funcionarios.length;
+                this.funcionarios = this.funcionarios.filter(funcionario => funcionario.nome !== nome);
+                const tamanhoAtual = this.funcionarios.length;
+                
+                if (tamanhoAnterior > tamanhoAtual) {
+                    showNotification(`Funcionário "${nome}" removido com sucesso.`);
+                } else {
+                    showNotification(`Funcionário "${nome}" não encontrado.`, 'error');
+                }
+            }
+
+            // Formatar data para dd/mm/aaaa
+            formatarData(data) {
+                const dia = data.getDate().toString().padStart(2, '0');
+                const mes = (data.getMonth() + 1).toString().padStart(2, '0');
+                const ano = data.getFullYear();
+                return `${dia}/${mes}/${ano}`;
+            }
+
+            // Formatar salário com separador de milhar como ponto e decimal como vírgula
+            formatarSalario(salario) {
+                return salario.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+,)/g, '$1.');
+            }
+
+            // Gerar HTML da tabela de funcionários
+            gerarTabelaFuncionarios() {
+                if (this.funcionarios.length === 0) {
+                    return '<p>Nenhum funcionário cadastrado.</p>';
+                }
+                
+                let html = '<table>';
+                html += '<thead><tr><th>Nome</th><th>Data de Nascimento</th><th>Salário</th><th>Função</th></tr></thead>';
+                html += '<tbody>';
+                
+                this.funcionarios.forEach(funcionario => {
+                    const dataNascimento = this.formatarData(funcionario.dataNascimento);
+                    const salario = this.formatarSalario(funcionario.salario);
+                    
+                    html += '<tr>';
+                    html += `<td>${funcionario.nome}</td>`;
+                    html += `<td>${dataNascimento}</td>`;
+                    html += `<td>${salario}</td>`;
+                    html += `<td>${funcionario.funcao}</td>`;
+                    html += '</tr>';
+                });
+                
+                html += '</tbody></table>';
+                return html;
+            }
+
+            // Gerar HTML dos funcionários agrupados por função
+            gerarHTMLFuncionariosPorFuncao() {
+                const mapa = this.agruparPorFuncao();
+                
+                if (mapa.size === 0) {
+                    return '<p>Nenhum funcionário cadastrado.</p>';
+                }
+                
+                let html = '';
+                
+                mapa.forEach((funcionarios, funcao) => {
+                    html += `<h3>${funcao}</h3>`;
+                    html += '<ul>';
+                    
+                    funcionarios.forEach(funcionario => {
+                        html += `<li>${funcionario.nome}</li>`;
+                    });
+                    
+                    html += '</ul>';
+                });
+                
+                return html;
+            }
+
+            // 3.3 – Imprimir todos os funcionários com todas suas informações
+            imprimirFuncionarios() {
+                console.log("Lista de funcionários:");
+                let output = "Lista de funcionários:\n";
+                
+                if (this.funcionarios.length === 0) {
+                    output += "Nenhum funcionário cadastrado.\n";
+                    this.outputElement.textContent += output + '\n';
+                    this.listaFuncionariosElement.innerHTML = '<p>Nenhum funcionário cadastrado.</p>';
+                    return;
+                }
+                
+                this.funcionarios.forEach(funcionario => {
+                    const dataNascimento = this.formatarData(funcionario.dataNascimento);
+                    const salario = this.formatarSalario(funcionario.salario);
+                    const linha = `Nome: ${funcionario.nome}, Data de Nascimento: ${dataNascimento}, Salário: ${salario}, Função: ${funcionario.funcao}`;
+                    
+                    console.log(linha);
+                    output += linha + '\n';
+                });
+                
+                this.outputElement.textContent += output + '\n';
+                this.listaFuncionariosElement.innerHTML = this.gerarTabelaFuncionarios();
+            }
+
+            // 3.4 – Os funcionários receberam 10% de aumento de salário
+            aumentarSalario(percentual) {
+                if (this.funcionarios.length === 0) {
+                    showNotification('Nenhum funcionário cadastrado para aumentar salário.', 'error');
+                    return;
+                }
+                
+                this.funcionarios.forEach(funcionario => {
+                    funcionario.salario *= (1 + percentual / 100);
+                });
+                
+                console.log(`\nSalários aumentados em ${percentual}%`);
+                this.outputElement.textContent += `\nSalários aumentados em ${percentual}%\n`;
+                
+                // Atualizar a tabela
+                this.listaFuncionariosElement.innerHTML = this.gerarTabelaFuncionarios();
+                showNotification(`Salários aumentados em ${percentual}% com sucesso.`);
+            }
+
+            // 3.5 – Agrupar os funcionários por função em um MAP
+            agruparPorFuncao() {
+                const mapa = new Map();
+                
+                this.funcionarios.forEach(funcionario => {
+                    if (!mapa.has(funcionario.funcao)) {
+                        mapa.set(funcionario.funcao, []);
+                    }
+                    mapa.get(funcionario.funcao).push(funcionario);
+                });
+                
+                return mapa;
+            }
+
+            // 3.6 – Imprimir os funcionários, agrupados por função
+            imprimirFuncionariosPorFuncao() {
+                const mapa = this.agruparPorFuncao();
+                console.log("\nFuncionários agrupados por função:");
+                let output = "\nFuncionários agrupados por função:\n";
+                
+                if (mapa.size === 0) {
+                    output += "Nenhum funcionário cadastrado.\n";
+                    this.outputElement.textContent += output + '\n';
+                    this.funcionariosPorFuncaoElement.innerHTML = '<p>Nenhum funcionário cadastrado.</p>';
+                    return;
+                }
+                
+                mapa.forEach((funcionarios, funcao) => {
+                    console.log(`\nFunção: ${funcao}`);
+                    output += `\nFunção: ${funcao}\n`;
+                    
+                    funcionarios.forEach(funcionario => {
+                        console.log(`- ${funcionario.nome}`);
+                        output += `- ${funcionario.nome}\n`;
+                    });
+                });
+                
+                this.outputElement.textContent += output + '\n';
+                this.funcionariosPorFuncaoElement.innerHTML = this.gerarHTMLFuncionariosPorFuncao();
+            }
+
+            // 3.8 – Imprimir os funcionários que fazem aniversário no mês 10 e 12
+            imprimirAniversariantes(meses) {
+                console.log("\nFuncionários que fazem aniversário nos meses especificados:");
+                let output = "\nFuncionários que fazem aniversário nos meses especificados:\n";
+                
+                const aniversariantes = [];
+                
+                this.funcionarios.forEach(funcionario => {
+                    const mes = funcionario.dataNascimento.getMonth() + 1;
+                    if (meses.includes(mes)) {
+                        aniversariantes.push(funcionario);
+                        console.log(`- ${funcionario.nome} (mês ${mes})`);
+                        output += `- ${funcionario.nome} (mês ${mes})\n`;
+                    }
+                });
+                
+                if (aniversariantes.length === 0) {
+                    output += "Nenhum funcionário faz aniversário nos meses especificados.\n";
+                }
+                
+                this.outputElement.textContent += output + '\n';
+                
+                if (aniversariantes.length > 0) {
+                    showNotification(`Encontrados ${aniversariantes.length} aniversariantes.`);
+                } else {
+                    showNotification('Nenhum aniversariante encontrado nos meses especificados.', 'error');
+                }
+            }
+
+            // 3.9 – Imprimir o funcionário com a maior idade
+            imprimirFuncionarioMaisVelho() {
+                if (this.funcionarios.length === 0) {
+                    console.log("\nNenhum funcionário cadastrado.");
+                    this.outputElement.textContent += "\nNenhum funcionário cadastrado.\n";
+                    showNotification('Nenhum funcionário cadastrado.', 'error');
+                    return;
+                }
+                
+                let maisVelho = this.funcionarios[0];
+                
+                this.funcionarios.forEach(funcionario => {
+                    if (funcionario.dataNascimento < maisVelho.dataNascimento) {
+                        maisVelho = funcionario;
+                    }
+                });
+                
+                const idade = this.calcularIdade(maisVelho.dataNascimento);
+                console.log(`\nFuncionário com a maior idade: ${maisVelho.nome}, Idade: ${idade} anos`);
+                this.outputElement.textContent += `\nFuncionário com a maior idade: ${maisVelho.nome}, Idade: ${idade} anos\n`;
+                showNotification(`Funcionário mais velho: ${maisVelho.nome} (${idade} anos)`);
+            }
+
+            // Calcular idade
+            calcularIdade(dataNascimento) {
+                const hoje = new Date();
+                let idade = hoje.getFullYear() - dataNascimento.getFullYear();
+                const mes = hoje.getMonth() - dataNascimento.getMonth();
+                
+                if (mes < 0 || (mes === 0 && hoje.getDate() < dataNascimento.getDate())) {
+                    idade--;
+                }
+                
+                return idade;
+            }
+
+            // 3.10 – Imprimir a lista de funcionários por ordem alfabética
+            imprimirFuncionariosOrdemAlfabetica() {
+                if (this.funcionarios.length === 0) {
+                    console.log("\nNenhum funcionário cadastrado.");
+                    this.outputElement.textContent += "\nNenhum funcionário cadastrado.\n";
+                    showNotification('Nenhum funcionário cadastrado.', 'error');
+                    return;
+                }
+                
+                const funcionariosOrdenados = [...this.funcionarios].sort((a, b) => a.nome.localeCompare(b.nome));
+                console.log("\nFuncionários em ordem alfabética:");
+                let output = "\nFuncionários em ordem alfabética:\n";
+                
+                funcionariosOrdenados.forEach(funcionario => {
+                    console.log(`- ${funcionario.nome}`);
+                    output += `- ${funcionario.nome}\n`;
+                });
+                
+                this.outputElement.textContent += output + '\n';
+                showNotification('Funcionários ordenados com sucesso.');
+            }
+
+            // 3.11 – Imprimir o total dos salários dos funcionários
+            imprimirTotalSalarios() {
+                if (this.funcionarios.length === 0) {
+                    console.log("\nNenhum funcionário cadastrado.");
+                    this.outputElement.textContent += "\nNenhum funcionário cadastrado.\n";
+                    showNotification('Nenhum funcionário cadastrado.', 'error');
+                    return;
+                }
+                
+                const total = this.funcionarios.reduce((soma, funcionario) => soma + funcionario.salario, 0);
+                const totalFormatado = this.formatarSalario(total);
+                console.log(`\nTotal dos salários: ${totalFormatado}`);
+                this.outputElement.textContent += `\nTotal dos salários: ${totalFormatado}\n`;
+                showNotification(`Total dos salários: ${totalFormatado}`);
+            }
+
+            // 3.12 – Imprimir quantos salários mínimos ganha cada funcionário
+            imprimirSalariosMinimos(salarioMinimo) {
+                if (this.funcionarios.length === 0) {
+                    console.log("\nNenhum funcionário cadastrado.");
+                    this.outputElement.textContent += "\nNenhum funcionário cadastrado.\n";
+                    showNotification('Nenhum funcionário cadastrado.', 'error');
+                    return;
+                }
+                
+                console.log("\nSalários mínimos por funcionário:");
+                let output = "\nSalários mínimos por funcionário:\n";
+                
+                this.funcionarios.forEach(funcionario => {
+                    const salariosMinimos = (funcionario.salario / salarioMinimo).toFixed(2);
+                    console.log(`- ${funcionario.nome}: ${salariosMinimos} salários mínimos`);
+                    output += `- ${funcionario.nome}: ${salariosMinimos} salários mínimos\n`;
+                });
+                
+                this.outputElement.textContent += output + '\n';
+                showNotification('Cálculo de salários mínimos concluído.');
+            }
+
+            // Método principal para executar todas as ações
+            executar() {
+                // Limpar o output
+                this.outputElement.textContent = '';
+                
+                // 3.1 – Inserir todos os funcionários
+                this.inserirFuncionarios();
+                
+                // 3.2 – Remover o funcionário "João" da lista
+                this.removerFuncionario("João");
+                
+                // 3.3 – Imprimir todos os funcionários com todas suas informações
+                this.imprimirFuncionarios();
+                
+                // 3.4 – Os funcionários receberam 10% de aumento de salário
+                this.aumentarSalario(10);
+                
+                // 3.5 e 3.6 – Agrupar e imprimir os funcionários por função
+                this.imprimirFuncionariosPorFuncao();
+                
+                // 3.8 – Imprimir os funcionários que fazem aniversário no mês 10 e 12
+                this.imprimirAniversariantes([10, 12]);
+                
+                // 3.9 – Imprimir o funcionário com a maior idade
+                this.imprimirFuncionarioMaisVelho();
+                
+                // 3.10 – Imprimir a lista de funcionários por ordem alfabética
+                this.imprimirFuncionariosOrdemAlfabetica();
+                
+                // 3.11 – Imprimir o total dos salários dos funcionários
+                this.imprimirTotalSalarios();
+                
+                // 3.12 – Imprimir quantos salários mínimos ganha cada funcionário
+                this.imprimirSalariosMinimos(1212.00);
+                
+                showNotification('Todas as ações executadas com sucesso!');
+            }
+        }
+
+        // Executar o programa
+        document.addEventListener('DOMContentLoaded', function() {
+            const principal = new Principal();
+            
+            // Configurar botões
+            document.getElementById('executar-btn').addEventListener('click', function() {
+                principal.executar();
+            });
+            
+            document.getElementById('listar-btn').addEventListener('click', function() {
+                principal.imprimirFuncionarios();
+            });
+            
+            document.getElementById('aumentar-btn').addEventListener('click', function() {
+                principal.aumentarSalario(10);
+            });
+            
+            document.getElementById('agrupar-btn').addEventListener('click', function() {
+                principal.imprimirFuncionariosPorFuncao();
+            });
+            
+            document.getElementById('aniversariantes-btn').addEventListener('click', function() {
+                principal.imprimirAniversariantes([10, 12]);
+            });
+            
+            document.getElementById('idade-btn').addEventListener('click', function() {
+                principal.imprimirFuncionarioMaisVelho();
+            });
+            
+            document.getElementById('ordenar-btn').addEventListener('click', function() {
+                principal.imprimirFuncionariosOrdemAlfabetica();
+            });
+            
+            document.getElementById('total-salarios-btn').addEventListener('click', function() {
+                principal.imprimirTotalSalarios();
+            });
+            
+            document.getElementById('salarios-minimos-btn').addEventListener('click', function() {
+                principal.imprimirSalariosMinimos(1212.00);
+            });
+            
+            // Executar automaticamente ao carregar a página
+            principal.executar();
+        });
+    </script>
+</body>
+</html>
